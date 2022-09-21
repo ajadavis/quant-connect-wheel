@@ -17,8 +17,8 @@ class CoveredCallAlgorithm(QCAlgorithm):
         self.MIN_PREMIUM = d.Decimal(0.3)  #what's the minimum premium you'll accept to buy an option
         self.ticker = "SPY"
         self.benchmarkTicker = "SPY"
-        self.SetStartDate(2007, 8, 1)
-        self.SetEndDate(2007, 9, 1)
+        self.SetStartDate(2012, 8, 1)
+        self.SetEndDate(2012, 12, 1)
         self.SetCash(50000)
         self.resolution = Resolution.Daily
         self.call, self.put, self.takeProfitTicket = None, None, None
@@ -50,11 +50,15 @@ class CoveredCallAlgorithm(QCAlgorithm):
         
     def OnData(self,slice):
         if (self.IsWarmingUp): return
+        self.Log(slice)
 
         # Check if the option is already in the portfolio, I already own it
         option_invested = [x.Key for x in self.Portfolio if x.Value.Invested and x.Value.Type==SecurityType.Option]
 
-        if len(option_invested) == 1: return
+        self.Log("len of option invested_list: " + str(len(option_invested)) )
+        if len(option_invested) == 1: 
+            self.Log("exiting option invest = 1")
+            return
             
         # If we already have underlying - check if we need to sell covered call
         if self.Portfolio[self.ticker].Invested:
@@ -70,7 +74,16 @@ class CoveredCallAlgorithm(QCAlgorithm):
             if i.Key != self.symbol: continue
         
             chain = i.Value
-            self.Log("chain = " + str(chain))
+            self.Log("chain = ") 
+            self.Log(type(chain))
+            self.Log(chain)
+            counter=0
+            
+            for x in chain:
+                self.Log(counter)
+                self.Log(x)
+                self.Log(type(x))
+                counter += 1
             
             # filter the put options contracts
             puts = [x for x in chain if x.Right == OptionRight.Put and abs(x.Greeks.Delta) > 0 and abs(x.Greeks.Delta) < self.MAX_DELTA and x.BidPrice > self.MIN_PREMIUM] 
@@ -131,5 +144,3 @@ class CoveredCallAlgorithm(QCAlgorithm):
                         
     def OnFrameworkData(self):
         return
-    
-    
